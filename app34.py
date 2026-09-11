@@ -205,7 +205,7 @@ if opcao == "📊 Painel de Mercado":
     st.caption("💡 Ao abrir conta pela OKX, você apoia o projeto MMI Infinity sem custo adicional.")
     border_color = "#2ecc71"
     bg_color = "rgba(46, 204, 113, 0.1)"
-              elif "VENDER" in sinal or "VENDA" in sinal:
+                   elif "VENDER" in sinal or "VENDA" in sinal:
                         border_color = "#e74c3c"
                         bg_color = "rgba(231, 76, 60, 0.1)"
              else:

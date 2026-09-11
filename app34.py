@@ -197,7 +197,13 @@ if opcao == "📊 Painel de Mercado":
                     """, unsafe_allow_html=True)
                 elif preco is not None:
                     if "COMPRA" in sinal:
-                        border_color = "#2ecc71"
+                            st.link_button(
+        "🚀 Abrir conta na OKX e Comprar",
+        "https://okx.com/pt-br/join/63CWYAI4",
+        use_container_width=True
+    )
+    st.caption("💡 Ao abrir conta pela OKX, você apoia o projeto MMI Infinity sem custo adicional.")
+    border_color = "#2ecc71"
                         bg_color = "rgba(46, 204, 113, 0.1)"
                     elif "VENDER" in sinal or "VENDA" in sinal:
                         border_color = "#e74c3c"

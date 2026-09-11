@@ -205,10 +205,10 @@ if opcao == "📊 Painel de Mercado":
     st.caption("💡 Ao abrir conta pela OKX, você apoia o projeto MMI Infinity sem custo adicional.")
     border_color = "#2ecc71"
     bg_color = "rgba(46, 204, 113, 0.1)"
-                    elif "VENDER" in sinal or "VENDA" in sinal:
+              elif "VENDER" in sinal or "VENDA" in sinal:
                         border_color = "#e74c3c"
                         bg_color = "rgba(231, 76, 60, 0.1)"
-                    else:
+             else:
                         border_color = "#f39c12"
                         bg_color = "rgba(243, 156, 18, 0.1)"
                     
@@ -227,7 +227,7 @@ if opcao == "📊 Painel de Mercado":
                     
                     if fig:
                         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, key=f"chart_{ticker}")
-                else:
+         else:
                     st.markdown(f"""
                     <div style="border: 1px solid #555; border-radius: 10px; padding: 10px; margin-bottom: 10px;">
                         <h4 style="margin: 0;">{nome}</h4>

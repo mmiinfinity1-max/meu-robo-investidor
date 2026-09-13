@@ -198,13 +198,13 @@ if opcao == "📊 Painel de Mercado":
                 elif preco is not None:
                     if "COMPRA" in sinal:
                         border_color = "#2ecc71"
-                        bg_color = "rgba(46, 204, 113, 0.1)"
+                            bg_color = "rgba(46, 204, 113, 0.1)"
                     elif "VENDER" in sinal or "VENDA" in sinal:
-                        border_color = "#e74c3c"
+                            border_color = "#e74c3c"
                         bg_color = "rgba(231, 76, 60, 0.1)"
                     else:
-                        border_color = "#f39c12"
-                        bg_color = "rgba(243, 156, 18, 0.1)"
+                            border_color = "#f39c12"
+                            bg_color = "rgba(243, 156, 18, 0.1)"
                     
                     cor_var = "#2ecc71" if variacao >= 0 else "#e74c3c"
                     seta = "▲" if variacao >= 0 else "▼"

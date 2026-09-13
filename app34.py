@@ -26,7 +26,6 @@ def analisar_ativo(ticker):
         preco_inicial = float(precos[0])
         variacao = ((preco_atual - preco_inicial) / preco_inicial) * 100
         
-        # RSI (INDICADOR PRINCIPAL)
         delta = dados['Close'].diff()
         ganho = delta.where(delta > 0, 0)
         perda = -delta.where(delta < 0, 0)
@@ -36,14 +35,10 @@ def analisar_ativo(ticker):
         rsi = 100 - (100 / (1 + rs))
         rsi_atual = rsi.iloc[-1].item() if hasattr(rsi.iloc[-1], 'item') else float(rsi.iloc[-1])
         
-        # ==========================================
-        # LÓGICA CORRIGIDA: RSI TEM PRIORIDADE MÁXIMA
-        # ==========================================
         sinal = "🟡 AGUARDAR"
         cor = "#f39c12"
         pontos = 0
         
-        # REGRA 1: RSI ABAIXO DE 45 = COMPRA (Prioridade Máxima)
         if rsi_atual < 30:
             sinal = "🟢 COMPRA FORTE"
             cor = "#2ecc71"
@@ -52,12 +47,10 @@ def analisar_ativo(ticker):
             sinal = "🟢 COMPRAR"
             cor = "#2ecc71"
             pontos = 3
-        # REGRA 2: RSI ENTRE 45 E 60 = AGUARDAR (Neutro)
         elif rsi_atual < 60:
             sinal = "🟡 AGUARDAR"
             cor = "#f39c12"
             pontos = 1
-        # REGRA 3: RSI ACIMA DE 60 = VENDER (Prioridade Máxima)
         elif rsi_atual > 70:
             sinal = "🔴 VENDA FORTE"
             cor = "#e74c3c"
@@ -67,11 +60,7 @@ def analisar_ativo(ticker):
             cor = "#e74c3c"
             pontos = -3
         
-        # ==========================================
-        # BÔNUS/DESCONTO POR MACD E MÉDIAS (só se RSI estiver neutro)
-        # ==========================================
         if 45 <= rsi_atual <= 60:
-            # Calcular MACD
             macd = dados['Close'].ewm(span=12, adjust=False).mean() - dados['Close'].ewm(span=26, adjust=False).mean()
             sinal_macd = macd.ewm(span=9, adjust=False).mean()
             macd_atual = macd.iloc[-1].item() if hasattr(macd.iloc[-1], 'item') else float(macd.iloc[-1])
@@ -80,18 +69,15 @@ def analisar_ativo(ticker):
             media_50 = dados['Close'].rolling(window=50).mean().iloc[-1].item()
             media_200 = dados['Close'].rolling(window=200).mean().iloc[-1].item()
             
-            # Se o MACD está subindo E a tendência é de alta, sobe para COMPRAR
             if macd_atual > sinal_atual and media_50 > media_200:
                 sinal = "🟢 COMPRAR"
                 cor = "#2ecc71"
                 pontos = 3
-            # Se o MACD está caindo E a tendência é de baixa, desce para VENDER
             elif macd_atual < sinal_atual and media_50 < media_200:
                 sinal = "🔴 VENDER"
                 cor = "#e74c3c"
                 pontos = -3
         
-        # Mini-gráfico
         cor_grafico = '#2ecc71' if variacao >= 0 else '#e74c3c'
         fig = go.Figure()
         fig.add_trace(go.Scatter(
@@ -113,7 +99,7 @@ def analisar_ativo(ticker):
         return None, None, None, None, None, None, None
 
 # ==========================================
-# LISTA DE ATIVOS POR CATEGORIA
+# LISTA DE ATIVOS
 # ==========================================
 ativos_por_categoria = {
     "🏦 Ações Brasileiras": {
@@ -121,7 +107,7 @@ ativos_por_categoria = {
         "BBAS3": "BBAS3.SA", "BBDC4": "BBDC4.SA", "WEGE3": "WEGE3.SA",
         "MGLU3": "MGLU3.SA", "LREN3": "LREN3.SA", "ABEV3": "ABEV3.SA",
     },
-    "🏠 FIIs (Fundos Imobiliários)": {
+    "🏠 FIIs": {
         "HGLG11": "HGLG11.SA", "MXRF11": "MXRF11.SA", "KNRI11": "KNRI11.SA",
         "KNCR11": "KNCR11.SA", "VGIR11": "VGIR11.SA", "ALZR11": "ALZR11.SA",
     },
@@ -164,26 +150,16 @@ opcao = st.sidebar.radio("Escolha uma opção:",
 # ==========================================
 if opcao == "📊 Painel de Mercado":
     st.title("📊 Painel de Mercado")
-    st.write("Indicações baseadas no **RSI** (Prioridade Máxima): RSI < 45 = COMPRAR | RSI > 60 = VENDER")
-    
-    st.markdown("""
-    🟢 **COMPRAR** = RSI abaixo de 45 | 
-    🟡 **AGUARDAR** = RSI entre 45 e 60 | 
-    🔴 **VENDER** = RSI acima de 60 | 
-    🪙 **Token** = Ver QuickSwap
-    """)
-    
+    st.write("Indicações baseadas no **RSI**: RSI < 45 = COMPRAR | RSI > 60 = VENDER")
+    st.markdown("🟢 **COMPRAR** = RSI abaixo de 45 | 🟡 **AGUARDAR** = RSI entre 45 e 60 | 🔴 **VENDER** = RSI acima de 60")
     st.markdown("---")
     
     for categoria, ativos in ativos_por_categoria.items():
         st.subheader(categoria)
-        
-        num_colunas = 4
-        cols = st.columns(num_colunas)
+        cols = st.columns(4)
         
         for idx, (nome, ticker) in enumerate(ativos.items()):
-            col_idx = idx % num_colunas
-            
+            col_idx = idx % 4
             with cols[col_idx]:
                 preco, variacao, sinal, cor, fig, info_rsi, rsi_val = analisar_ativo(ticker)
                 
@@ -198,13 +174,13 @@ if opcao == "📊 Painel de Mercado":
                 elif preco is not None:
                     if "COMPRA" in sinal:
                         border_color = "#2ecc71"
-                            bg_color = "rgba(46, 204, 113, 0.1)"
+                        bg_color = "rgba(46, 204, 113, 0.1)"
                     elif "VENDER" in sinal or "VENDA" in sinal:
-                            border_color = "#e74c3c"
+                        border_color = "#e74c3c"
                         bg_color = "rgba(231, 76, 60, 0.1)"
                     else:
-                            border_color = "#f39c12"
-                            bg_color = "rgba(243, 156, 18, 0.1)"
+                        border_color = "#f39c12"
+                        bg_color = "rgba(243, 156, 18, 0.1)"
                     
                     cor_var = "#2ecc71" if variacao >= 0 else "#e74c3c"
                     seta = "▲" if variacao >= 0 else "▼"
@@ -218,6 +194,13 @@ if opcao == "📊 Painel de Mercado":
                         <p style="margin: 5px 0; font-size: 14px; font-weight: bold; color: {border_color};">{sinal}</p>
                     </div>
                     """, unsafe_allow_html=True)
+                    
+                    if "COMPRA" in sinal:
+                        st.link_button(
+                            "🚀 Abrir conta na OKX e Comprar",
+                            "https://okx.com/pt-br/join/63CWYAI4",
+                            use_container_width=True
+                        )
                     
                     if fig:
                         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, key=f"chart_{ticker}")
@@ -262,20 +245,18 @@ elif opcao == "🌟 Radar de Oportunidades":
             df = pd.DataFrame(resultados)
             df = df.sort_values(by="RSI", ascending=True).reset_index(drop=True)
             
-            st.subheader("🏆 TOP 5 MELHORES OPORTUNIDADES DE COMPRA (Menor RSI)")
-            top_5 = df.head(5)
-            
+            st.subheader("🏆 TOP 5 MELHORES OPORTUNIDADES (Menor RSI)")
             cols = st.columns(5)
-            for i, row in top_5.iterrows():
+            for i, row in df.head(5).iterrows():
                 with cols[i]:
                     if "COMPRA" in row['Sinal']:
-                        st.success(f"### {row['Ativo']}\n**R$ {row['Preço']:.2f}**\nRSI: {row['RSI']}\n{row['Sinal']}")
+                        st.success(f"### {row['Ativo']}\n**R$ {row['Preço']:.2f}**\nRSI: {row['RSI']}")
                     elif "AGUARDAR" in row['Sinal']:
-                        st.warning(f"### {row['Ativo']}\n**R$ {row['Preço']:.2f}**\nRSI: {row['RSI']}\n{row['Sinal']}")
+                        st.warning(f"### {row['Ativo']}\n**R$ {row['Preço']:.2f}**\nRSI: {row['RSI']}")
                     else:
-                        st.error(f"### {row['Ativo']}\n**R$ {row['Preço']:.2f}**\nRSI: {row['RSI']}\n{row['Sinal']}")
+                        st.error(f"### {row['Ativo']}\n**R$ {row['Preço']:.2f}**\nRSI: {row['RSI']}")
             
-            st.subheader("📋 Tabela Completa (ordenada por RSI)")
+            st.subheader("📋 Tabela Completa")
             st.dataframe(df)
         else:
             st.warning("⚠️ Nenhum ativo encontrado.")
@@ -285,12 +266,11 @@ elif opcao == "🌟 Radar de Oportunidades":
 # ==========================================
 elif opcao == "📈 Swing Trade (Ações)":
     st.title("📈 Swing Trade (Ações)")
-    st.write("Ações com **RSI abaixo de 45** para operar na semana.")
+    st.write("Ações com **RSI abaixo de 45**.")
     
     if st.button("🔍 Buscar Ações para Swing Trade"):
         resultados = []
         progress_bar = st.progress(0)
-        
         acoes = ativos_por_categoria["🏦 Ações Brasileiras"]
         
         for i, (nome, ticker) in enumerate(acoes.items()):
@@ -309,17 +289,16 @@ elif opcao == "📈 Swing Trade (Ações)":
         if resultados:
             df = pd.DataFrame(resultados)
             df = df.sort_values(by="RSI", ascending=True).reset_index(drop=True)
-            
             acoes_baratas = df[df["RSI"] < 45]
             
             if not acoes_baratas.empty:
                 st.subheader("🏆 AÇÕES PRONTAS PARA COMPRAR (RSI < 45)")
                 for idx, row in acoes_baratas.iterrows():
-                    st.success(f"**{row['Ativo']}** - R$ {row['Preço']:.2f} - RSI: {row['RSI']} - {row['Sinal']}")
+                    st.success(f"**{row['Ativo']}** - R$ {row['Preço']:.2f} - RSI: {row['RSI']}")
             else:
-                st.warning("⚠️ Nenhuma ação com RSI abaixo de 45. Aguarde a queda!")
+                st.warning("⚠️ Nenhuma ação com RSI abaixo de 45.")
             
-            st.subheader("📋 Todas as Ações (ordenadas por RSI)")
+            st.subheader("📋 Todas as Ações")
             st.dataframe(df)
         else:
             st.warning("⚠️ Nenhuma ação encontrada.")
@@ -334,7 +313,6 @@ elif opcao == "📊 Ranking de Eficiência":
     if st.button("🔍 Calcular Ranking"):
         resultados = []
         progress_bar = st.progress(0)
-        
         todos_ativos = {}
         for categoria in ativos_por_categoria.values():
             todos_ativos.update(categoria)
@@ -343,7 +321,6 @@ elif opcao == "📊 Ranking de Eficiência":
             if ticker == "MMI_POLYGON":
                 progress_bar.progress((i + 1) / len(todos_ativos))
                 continue
-            
             try:
                 dados = yf.download(ticker, period="3mo", interval="1d", progress=False)
                 if len(dados) < 30:
@@ -356,7 +333,6 @@ elif opcao == "📊 Ranking de Eficiência":
                 taxa_acerto = 100 if preco_hoje > preco_30d else 0
                 
                 preco, variacao, sinal, cor, _, info_rsi, rsi_val = analisar_ativo(ticker)
-                
                 if preco is not None and rsi_val is not None:
                     resultados.append({
                         "Ativo": nome, "Ticker": ticker,
@@ -372,20 +348,16 @@ elif opcao == "📊 Ranking de Eficiência":
         
         if resultados:
             df = pd.DataFrame(resultados)
-            # Filtrar apenas RSI < 45 (baratos)
             df_filtrado = df[df["RSI"] < 45]
             
             if not df_filtrado.empty:
                 df_filtrado = df_filtrado.sort_values(by="RSI", ascending=True).reset_index(drop=True)
-                st.subheader("🏆 ATIVOS BARATOS (RSI < 45) COM HISTÓRICO")
-                
+                st.subheader("🏆 ATIVOS BARATOS (RSI < 45)")
                 for idx, row in df_filtrado.iterrows():
                     st.success(f"**{row['Ativo']}** - RSI: {row['RSI']} - Taxa: {row['Taxa de Acerto (%)']}% - R$ {row['Preço Atual']:.2f}")
-                
                 st.dataframe(df_filtrado)
             else:
-                st.warning("⚠️ Nenhum ativo com RSI abaixo de 45 no momento.")
-                st.subheader("📋 Todos os Ativos")
+                st.warning("⚠️ Nenhum ativo com RSI abaixo de 45.")
                 st.dataframe(df.sort_values(by="RSI", ascending=True))
         else:
             st.warning("⚠️ Nenhum ativo encontrado.")
@@ -395,7 +367,6 @@ elif opcao == "📊 Ranking de Eficiência":
 # ==========================================
 elif opcao == "⏪ Backtest (Testar o Passado)":
     st.title("⏪ Backtest - Teste o Passado")
-    
     todos_ativos = {}
     for categoria in ativos_por_categoria.values():
         todos_ativos.update(categoria)
@@ -417,7 +388,6 @@ elif opcao == "⏪ Backtest (Testar o Passado)":
                 else:
                     data_compra = pd.to_datetime(data_compra)
                     dados.index = pd.to_datetime(dados.index)
-                    
                     preco_compra = None
                     for idx in dados.index:
                         if idx <= data_compra:
@@ -430,7 +400,6 @@ elif opcao == "⏪ Backtest (Testar o Passado)":
                     else:
                         preco_compra = float(preco_compra.iloc[0]) if hasattr(preco_compra, 'iloc') else float(preco_compra)
                         preco_atual = float(dados['Close'].iloc[-1].item())
-                        
                         investimento = preco_compra * quantidade
                         valor_atual = preco_atual * quantidade
                         lucro = valor_atual - investimento
@@ -455,11 +424,10 @@ elif opcao == "⏪ Backtest (Testar o Passado)":
                 st.error(f"Erro: {e}")
 
 # ==========================================
-# TELA 6: COMPRAR ATIVO (SIMULAÇÃO)
+# TELA 6: COMPRAR ATIVO
 # ==========================================
 elif opcao == "🛒 Comprar Ativo (Simulação)":
     st.title("🛒 Comprar Ativo (Simulação)")
-    
     todos_ativos = {}
     for categoria in ativos_por_categoria.values():
         todos_ativos.update(categoria)
@@ -480,7 +448,6 @@ elif opcao == "🛒 Comprar Ativo (Simulação)":
     if st.button("✅ Registrar Simulação"):
         if 'carteira_teste' not in st.session_state:
             st.session_state.carteira_teste = pd.DataFrame(columns=["Ativo", "Ticker", "Preco_Compra", "Quantidade", "Data_Compra"])
-        
         novo_registro = pd.DataFrame([{"Ativo": ativo_escolhido, "Ticker": ticker, "Preco_Compra": preco_atual, "Quantidade": quantidade, "Data_Compra": datetime.now().strftime("%d/%m/%Y")}])
         st.session_state.carteira_teste = pd.concat([st.session_state.carteira_teste, novo_registro], ignore_index=True)
         st.success(f"✅ Compra simulada de {quantidade} unidades registrada!")
@@ -490,7 +457,6 @@ elif opcao == "🛒 Comprar Ativo (Simulação)":
 # ==========================================
 elif opcao == "🧪 Simulador de Teste":
     st.title("🧪 Simulador de Teste")
-    
     if 'carteira_teste' not in st.session_state or st.session_state.carteira_teste.empty:
         st.info("Você ainda não tem compras simuladas.")
     else:
@@ -502,10 +468,8 @@ elif opcao == "🧪 Simulador de Teste":
                 else:
                     dados = yf.download(row['Ticker'], period="1d", interval="1d", progress=False)
                     preco_atual = dados['Close'].iloc[-1].item()
-                
                 preco_compra = row['Preco_Compra']
                 quantidade = row['Quantidade']
-                
                 investimento = preco_compra * quantidade
                 valor_atual = preco_atual * quantidade
                 lucro = valor_atual - investimento
@@ -533,7 +497,6 @@ elif opcao == "🧪 Simulador de Teste":
 # ==========================================
 elif opcao == "📈 Gráfico Profissional":
     st.title("📈 Gráfico Profissional")
-    
     ticker = st.text_input("Ticker:", "PETR4.SA")
     
     if ticker == "MMI_POLYGON":
@@ -562,7 +525,6 @@ elif opcao == "📈 Gráfico Profissional":
                 media_perda = perda.rolling(window=14).mean()
                 rs = media_ganho / media_perda
                 rsi = 100 - (100 / (1 + rs))
-                
                 rsi_para_grafico = rsi.dropna()
                 
                 fig.add_trace(go.Scatter(x=df.index, y=rsi_para_grafico, name='RSI', line=dict(color='purple')), row=2, col=1)
